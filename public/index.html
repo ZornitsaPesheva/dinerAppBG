@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="bg">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Готварски планер</title>
+    <meta property="og:title" content="Готварски планер" />
+    <meta property="og:description" content="Пазете списък с рецепти, следете колко пъти е приготвена всяка и получавайте предложения какво да сготвите днес." />
+    <meta property="og:image" content="/dinners.png" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero">
+        <p class="eyebrow">Готварски план</p>
+        <h1>Какво да сготвим днес?</h1>
+        <div id="mobile-auth-slot" class="mobile-auth-slot" hidden></div>
+        <!-- <p class="hero-copy">
+          The app keeps a list of recipes, tracks how many times each has been cooked and when,
+          then suggests the one cooked longest ago and the one cooked least often.
+        </p> -->
+      </section>
+
+      <section class="panel auth-panel">
+        <article class="card auth-card">
+          <div class="card-header auth-header">
+            <div id="auth-intro">
+              <h2>Вход с Google</h2>
+              <p class="auth-copy">Влезте с Google, за да създадете личен списък с любими рецепти.</p>
+            </div>
+          </div>
+
+          <div id="auth-user" class="auth-user" hidden>
+            <img id="user-avatar" class="user-avatar" alt="" />
+            <div>
+              <p id="user-name" class="auth-user-name"></p>
+              <p id="user-email" class="auth-user-email"></p>
+            </div>
+            <button id="logout-button" class="ghost-btn" type="button" hidden>Изход</button>
+          </div>
+
+          <div id="google-signin" class="google-signin"></div>
+          <div class="demo-entry">
+            <span class="demo-divider">или</span>
+            <button id="try-demo-button" class="ghost-btn" type="button">Тествай набързо</button>
+          </div>
+          <p id="auth-message" class="message" aria-live="polite"></p>
+        </article>
+      </section>
+
+      <div id="app-shell" hidden>
+        <div id="demo-banner" class="demo-banner" hidden>
+          <span>Демо режим — рецептите се запазват в браузъра ви и ще бъдат обединени при влизане.</span>
+          <button id="exit-demo-button" class="ghost-btn" type="button">Излез от демото</button>
+        </div>
+        <section class="panel panel-grid">
+          <article class="card add-card">
+            <h2>Добави нова рецепта</h2>
+            <form id="dish-form" class="stack">
+              <label class="field">
+                <span>Име</span>
+                <input id="dish-name" name="name" type="text" maxlength="80" required />
+              </label>
+              <label class="field">
+                <span>Описание</span>
+                <textarea id="dish-notes" name="notes" rows="3" maxlength="200"></textarea>
+              </label>
+              <button type="submit" class="primary-btn">Запази</button>
+            </form>
+            <p id="form-message" class="message" aria-live="polite"></p>
+          </article>
+
+          <article class="card suggestions-card">
+            <div class="card-header">
+              <h2>Препоръки</h2>
+              <button id="refresh-button" class="ghost-btn" type="button">Обнови</button>
+            </div>
+            <div id="suggestions" class="suggestions-list"></div>
+          </article>
+        </section>
+
+        <section class="panel">
+          <div class="card-header">
+            <h2>Всички рецепти</h2>
+            <p class="section-note">Натиснете „Сготвих го", за да маркирате рецептата като приготвена.</p>
+          </div>
+          <div id="dishes" class="dish-list"></div>
+        </section>
+      </div>
+    </main>
+
+    <template id="suggestion-template">
+      <article class="suggestion-item">
+        <div class="dish-main">
+          <div>
+            <p class="suggestion-label"></p>
+            <h3 class="suggestion-name"></h3>
+            <p class="suggestion-meta"></p>
+          </div>
+          <button class="primary-btn cook-button" type="button">Сготвих го</button>
+        </div>
+      </article>
+    </template>
+
+    <template id="dish-template">
+      <article class="dish-item">
+        <div class="dish-main">
+          <div>
+            <h3 class="dish-name"></h3>
+            <p class="dish-notes"></p>
+          </div>
+          <button class="primary-btn cook-button" type="button">Сготвих го</button>
+        </div>
+        <div class="dish-meta-row">
+          <span class="meta-pill count-pill"></span>
+          <span class="meta-pill last-pill"></span>
+        </div>
+      </article>
+    </template>
+
+    <footer class="site-footer">Created by pesheva@gmail.com</footer>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="/app.js"></script>
+  </body>
+  </html>

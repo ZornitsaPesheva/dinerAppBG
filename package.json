@@ -1,0 +1,13 @@
+{
+  "name": "diner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Simple dish planner with JSON storage",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.8.0",
+    "google-auth-library": "^10.6.2"
+  }
+}
