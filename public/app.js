@@ -505,5 +505,20 @@ exitDemoButton.addEventListener('click', () => {
   clearDishUi();
 });
 
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) {
+    return;
+  }
+
+  window.addEventListener('load', async () => {
+    try {
+      await navigator.serviceWorker.register('/service-worker.js');
+    } catch {
+      // Service worker registration is optional; app should keep working without it.
+    }
+  });
+}
+
 initializeApp();
 bindViewportListener();
+registerServiceWorker();

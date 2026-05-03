@@ -1,0 +1,29 @@
+{
+  "name": "Готварски планер",
+  "short_name": "Планер",
+  "lang": "bg",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4ecdf",
+  "theme_color": "#8b4f2b",
+  "description": "Планирай какво да сготвиш, следи кога е приготвено и колко често.",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -29,6 +29,8 @@ const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.svg': 'image/svg+xml; charset=utf-8'
 };
 
@@ -449,8 +451,13 @@ async function serveStaticFile(requestPath, response) {
     const fileContent = await fs.readFile(resolvedPath);
     const extension = path.extname(resolvedPath);
     const contentType = MIME_TYPES[extension] || 'application/octet-stream';
+    const headers = { 'Content-Type': contentType };
 
-    response.writeHead(200, { 'Content-Type': contentType });
+    if (safePath === '/service-worker.js') {
+      headers['Cache-Control'] = 'no-cache';
+    }
+
+    response.writeHead(200, headers);
     response.end(fileContent);
   } catch {
     const indexPath = path.join(PUBLIC_DIR, 'index.html');
