@@ -7,9 +7,12 @@ const { cert, getApps, initializeApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 
 const PORT = process.env.PORT || 3001;
-const DATA_DIR = path.join(__dirname, 'data');
+const IS_VERCEL = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+const RUNTIME_ROOT_DIR = IS_VERCEL ? '/tmp' : __dirname;
+const DATA_DIR = path.join(RUNTIME_ROOT_DIR, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'dishes.json');
 const USER_DATA_DIR = path.join(DATA_DIR, 'users');
+const SEED_DATA_FILE = path.join(__dirname, 'data', 'dishes.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '716007402302-ndd6hn2shv69epsn3aogp4v0es8hh66p.apps.googleusercontent.com';
 const SESSION_COOKIE_NAME = 'diner_session';
@@ -36,7 +39,19 @@ async function ensureDataFile() {
   try {
     await fs.access(DATA_FILE);
   } catch {
-    await fs.writeFile(DATA_FILE, '[]\n', 'utf8');
+    let seedData = [];
+
+    try {
+      const seedRaw = await fs.readFile(SEED_DATA_FILE, 'utf8');
+      const parsedSeed = JSON.parse((seedRaw || '[]').replace(/^\uFEFF/, ''));
+      if (Array.isArray(parsedSeed)) {
+        seedData = parsedSeed;
+      }
+    } catch {
+      seedData = [];
+    }
+
+    await fs.writeFile(DATA_FILE, `${JSON.stringify(seedData, null, 2)}\n`, 'utf8');
   }
 }
 
@@ -294,10 +309,20 @@ function requireAuthenticatedUser(request, response) {
 }
 
 async function readLegacyDishes() {
+  try {
+    const seedRaw = await fs.readFile(SEED_DATA_FILE, 'utf8');
+    const parsedSeed = JSON.parse((seedRaw || '[]').replace(/^\uFEFF/, ''));
+    if (Array.isArray(parsedSeed)) {
+      return parsedSeed;
+    }
+  } catch {
+    // Ignore and fall back to runtime file.
+  }
+
   await ensureDataFile();
-  const raw = await fs.readFile(DATA_FILE, 'utf8');
-  const parsed = JSON.parse((raw || '[]').replace(/^\uFEFF/, ''));
-  return Array.isArray(parsed) ? parsed : [];
+  const runtimeRaw = await fs.readFile(DATA_FILE, 'utf8');
+  const runtimeParsed = JSON.parse((runtimeRaw || '[]').replace(/^\uFEFF/, ''));
+  return Array.isArray(runtimeParsed) ? runtimeParsed : [];
 }
 
 function normalizeDish(dish) {
@@ -574,7 +599,7 @@ async function handleApi(request, response) {
   sendJson(response, 404, { error: 'API route not found' });
 }
 
-const server = http.createServer(async (request, response) => {
+async function requestHandler(request, response) {
   try {
     if (!request.url) {
       sendJson(response, 400, { error: 'Missing request URL' });
@@ -590,36 +615,42 @@ const server = http.createServer(async (request, response) => {
   } catch (error) {
     sendJson(response, 500, { error: error.message || 'Internal server error' });
   }
-});
+}
 
-server.on('error', error => {
-  if (error && error.code === 'EADDRINUSE') {
-    console.error(`Port ${PORT} is already in use. Stop the other process or run with PORT=<free-port>.`);
-    process.exitCode = 1;
-    return;
-  }
+if (IS_VERCEL) {
+  module.exports = requestHandler;
+} else {
+  const server = http.createServer(requestHandler);
 
-  console.error('Server failed to start:', error);
-  process.exitCode = 1;
-});
-
-ensureDataFile()
-  .then(() => {
-    if (!process.env.SESSION_SECRET) {
-      console.warn('SESSION_SECRET is not set. Using a temporary development session secret.');
+  server.on('error', error => {
+    if (error && error.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use. Stop the other process or run with PORT=<free-port>.`);
+      process.exitCode = 1;
+      return;
     }
 
-    if (firestore) {
-      console.log(`Firestore storage is enabled (collection: ${FIRESTORE_COLLECTION}).`);
-    } else {
-      console.log('Using local JSON storage from data/users.');
-    }
-
-    server.listen(PORT, () => {
-      console.log(`Diner app is running on http://localhost:${PORT}`);
-    });
-  })
-  .catch(error => {
-    console.error('Failed to initialize data storage:', error);
+    console.error('Server failed to start:', error);
     process.exitCode = 1;
   });
+
+  ensureDataFile()
+    .then(() => {
+      if (!process.env.SESSION_SECRET) {
+        console.warn('SESSION_SECRET is not set. Using a temporary development session secret.');
+      }
+
+      if (firestore) {
+        console.log(`Firestore storage is enabled (collection: ${FIRESTORE_COLLECTION}).`);
+      } else {
+        console.log('Using local JSON storage from data/users.');
+      }
+
+      server.listen(PORT, () => {
+        console.log(`Diner app is running on http://localhost:${PORT}`);
+      });
+    })
+    .catch(error => {
+      console.error('Failed to initialize data storage:', error);
+      process.exitCode = 1;
+    });
+}
